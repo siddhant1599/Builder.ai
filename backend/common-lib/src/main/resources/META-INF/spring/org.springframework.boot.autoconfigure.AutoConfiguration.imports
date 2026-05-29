@@ -1,0 +1,2 @@
+com.builder.ai.distributed_builder_ai.common_lib.security.SharedSecurityAutoConfiguration
+com.builder.ai.distributed_builder_ai.common_lib.error.SharedExceptionAutoConfiguration
