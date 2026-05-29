@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: config-service
+
+  cloud:
+    config.server.git:
+      username: siddhant
+      default-label: master
+
+server.port: 8888
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  health:
+    config:
+      enabled: false
+---
+spring:
+  config:
+    activate:
+      on-profile: k8s
+
+  cloud:
+    discovery:
+      enabled: false
+    config.server.git:
+      uri: https://github.com/siddhant/builder-ai-config-server
+      username: ${GIT_USERNAME}
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
