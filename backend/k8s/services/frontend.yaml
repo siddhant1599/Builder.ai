@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: builder-ai-frontend
+  namespace: builder-ai-core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: builder-ai-frontend
+  template:
+    metadata:
+      labels:
+        app: builder-ai-frontend
+    spec:
+      containers:
+        - name: builder-ai-frontend
+          image: siddhant/builder-ai-frontend@sha256:2e94f1a6fa028f34d3405974fe52c17de9bae5712ec2219ef5652a08ab3953a9
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: builder-ai-frontend
+  namespace: builder-ai-core
+spec:
+  type: ClusterIP
+  selector:
+    app: builder-ai-frontend
+  ports:
+    - port: 80
+      targetPort: 80

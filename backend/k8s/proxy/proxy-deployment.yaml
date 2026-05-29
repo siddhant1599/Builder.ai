@@ -1,0 +1,50 @@
+# k8s/proxy/proxy-deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: builder-ai-me-proxy
+  namespace: builder-ai-core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: builder-ai-me-proxy
+  template:
+    metadata:
+      labels:
+        app: builder-ai-me-proxy
+    spec:
+      containers:
+        - name: builder-ai-me-proxy
+          image: siddhant/builder-ai-me-proxy:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "250m"
+              memory: "512Mi"
+          envFrom:
+            - configMapRef:
+                name: builder-ai-shared-config
+          env:
+            - name: REDIS_URL
+              value: "redis://redis-0.redis.builder-ai-core.svc.cluster.local:6379" 
+            - name: PORT
+              value: "80"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: builder-ai-me-proxy
+  namespace: builder-ai-core
+spec:
+  selector:
+    app: builder-ai-me-proxy
+  ports:
+    - port: 80
+      targetPort: 80

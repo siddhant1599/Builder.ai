@@ -1,0 +1,65 @@
+name: Deploy Account Service
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'account-service/**'
+
+env:
+  SERVICE_NAME: account-service
+  IMAGE_NAME: siddhant/builder-ai-account-service
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    name: Build, Push, and Deploy to GKE
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+      
+      - name: Build and Install Common Lib
+        working-directory: ./common-lib
+        run: ./mvnw clean install -DskipTests
+
+      - name: Build and Push Docker Image with Jib
+        working-directory: ./${{ env.SERVICE_NAME }}
+        run: |
+          ./mvnw compile jib:build \
+            -Djib.to.image=docker.io/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            -Djib.to.tags=latest \
+            -Djib.to.auth.username=${{ secrets.DOCKERHUB_USERNAME }} \
+            -Djib.to.auth.password=${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
+          service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
+
+      - name: Get GKE Credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ secrets.GCP_CLUSTER }}
+          location: ${{ secrets.GCP_ZONE }}
+
+      - name: Deploy to GKE
+        run: |
+          kubectl set image deployment/${{ env.SERVICE_NAME }} \
+          ${{ env.SERVICE_NAME }}=${{ env.IMAGE_NAME }}:${{ github.sha }} \
+          -n builder-ai-core
+          
+          kubectl rollout status deployment/${{ env.SERVICE_NAME }} -n builder-ai-core
