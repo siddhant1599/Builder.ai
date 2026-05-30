@@ -1,0 +1,188 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 6%;
+    --foreground: 210 40% 96%;
+
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 96%;
+
+    --popover: 222 47% 10%;
+    --popover-foreground: 210 40% 96%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 6%;
+
+    --secondary: 260 60% 55%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 222 30% 14%;
+    --muted-foreground: 215 20% 55%;
+
+    --accent: 260 50% 50%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 222 30% 18%;
+    --input: 222 30% 16%;
+    --ring: 217 91% 60%;
+
+    --radius: 0.5rem;
+
+    /* Custom tokens */
+    --panel: 222 40% 9%;
+    --panel-hover: 222 35% 12%;
+    --panel-active: 222 35% 15%;
+    --chat-user: 217 70% 25%;
+    --chat-ai: 260 50% 20%;
+    --file-active: 217 60% 20%;
+    --syntax-keyword: 280 70% 70%;
+    --syntax-string: 140 60% 60%;
+    --syntax-number: 35 90% 65%;
+    --syntax-comment: 220 15% 45%;
+    --syntax-function: 200 80% 65%;
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(260 60% 55%) 100%);
+    --gradient-panel: linear-gradient(180deg, hsl(222 47% 10%) 0%, hsl(222 47% 6%) 100%);
+    --shadow-glow: 0 0 20px hsl(217 91% 60% / 0.15);
+    --shadow-panel: 0 4px 24px hsl(0 0% 0% / 0.4);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/30;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-panel border border-border/50 backdrop-blur-sm;
+    box-shadow: var(--shadow-panel);
+  }
+
+  .gradient-text {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glow-effect {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .streaming-cursor {
+    @apply inline-block w-2 h-5 bg-primary animate-pulse ml-0.5;
+  }
+
+  .file-tree-item {
+    @apply flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors;
+    @apply hover:bg-panel-hover text-muted-foreground hover:text-foreground;
+  }
+
+  .file-tree-item.active {
+    @apply bg-file-active text-foreground;
+  }
+
+  .chat-message {
+    @apply p-4 rounded-lg max-w-[85%] animate-fade-in;
+  }
+
+  .chat-message.user {
+    @apply bg-chat-user ml-auto;
+  }
+
+  .chat-message.ai {
+    @apply bg-chat-ai mr-auto;
+  }
+
+  .code-line {
+    @apply font-mono text-sm leading-6;
+  }
+
+  .panel-header {
+    @apply h-12 flex items-center justify-between px-4 border-b border-border/50 bg-panel;
+  }
+
+  .tab-button {
+    @apply px-4 py-2 text-sm font-medium transition-all rounded-md;
+    @apply text-muted-foreground hover:text-foreground hover:bg-panel-hover;
+  }
+
+  .tab-button.active {
+    @apply bg-primary/20 text-primary;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .animate-stream {
+    animation: stream 0.05s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes stream {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
