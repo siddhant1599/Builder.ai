@@ -20,10 +20,11 @@ Each Spring Boot service authenticates requests locally via a shared `JwtAuthFil
 
 ### Kubernetes Deployment Topology
 
-Traffic enters through an **NGINX Ingress**. `/api` traffic is routed to the Spring Cloud
-Gateway; everything else goes to a Node.js proxy that serves the frontend and proxies live
-project previews. User previews run in an isolated `builderai-previews` namespace, separate
-from the core application namespace `builderai-core`.
+Traffic enters through an **NGINX Ingress**, which routes by host: `api.builder.ai` goes to
+the Spring Cloud Gateway, `builder.ai` to the frontend, and `*.previews.builder.ai` to a
+Node.js proxy that resolves each subdomain to a live project preview. User previews run in
+an isolated `builder-ai-previews` namespace, separate from the core application namespace
+`builder-ai-core`.
 
 ![Kubernetes deployment architecture](docs/images/architecture-kubernetes.png)
 
@@ -156,33 +157,47 @@ The steps below mirror the deployment runbook in `Architecture.pdf`.
 
 **1. Connect to the GKE cluster** — bridges your local `kubectl` to the cloud cluster:
 ```bash
-gcloud container clusters get-credentials builderai-me-cluster \
+gcloud container clusters get-credentials builder-ai-me-cluster \
   --region asia-south1 --project <your-project-id>
 ```
 
-**2. Create the namespaces** — `builderai-core` for the app, `builderai-previews` to isolate dynamic user previews:
+**2. Create the namespaces and shared config** — `builder-ai-core` for the app,
+`builder-ai-previews` to isolate dynamic user previews. The same manifest also creates the
+`builder-ai-shared-config` ConfigMap (preview domain, preview namespace, proxy port):
 ```bash
-kubectl create namespace builderai-core
-kubectl create namespace builderai-previews
+kubectl apply -f backend/k8s/infra/namespaces.yaml
 ```
 
-**3. Apply base configuration (secrets & config maps)** — load env vars and credentials:
+**3. Load the secrets** — database passwords, API keys, and other credentials from your `.env`:
 ```bash
-kubectl create secret generic app-secrets --from-env-file=.env -n builderai-core
-kubectl apply -f backend/k8s/configmaps/ -n builderai-core
+kubectl create secret generic app-secrets --from-env-file=.env -n builder-ai-core
 ```
 
-**4. Deploy stateful infrastructure first** — PostgreSQL, Redis, Kafka, MinIO must be up before the apps:
+**4. Deploy stateful infrastructure first** — PostgreSQL (pgvector), Redis, Kafka, MinIO must be up before the apps:
 ```bash
-kubectl apply -f backend/k8s/stateful/ -n builderai-core
+kubectl apply -f backend/k8s/stateful/
 ```
 
 **5. Deploy the microservices** — Deployments (Jib-built images) and Services (internal DNS):
 ```bash
-kubectl apply -f backend/k8s/services/ -n builderai-core
+kubectl apply -f backend/k8s/services/
 ```
 
-**6. Install the NGINX Ingress Controller** — provisions a Google Cloud load balancer:
+**6. Deploy the preview tier** — the Node.js proxy that the ingress hands `*.previews.builder.ai`
+to, plus the pool of runner pods that back user previews:
+```bash
+kubectl apply -f backend/k8s/proxy/proxy-deployment.yaml
+kubectl apply -f backend/k8s/infra/runner-pool.yaml
+```
+
+**7. Apply the network policies** — restricts the core namespace to internal traffic plus the
+ingress, and sandboxes preview pods:
+```bash
+kubectl apply -f backend/k8s/infra/core-network-policies.yaml
+kubectl apply -f backend/k8s/infra/preview-network-policies.yaml
+```
+
+**8. Install the NGINX Ingress Controller** — provisions a Google Cloud load balancer:
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/cloud/deploy.yaml
 ```
@@ -191,17 +206,21 @@ Wait for Google to assign a public IP (note the `EXTERNAL-IP` for DNS):
 kubectl get svc ingress-nginx-controller -n ingress-nginx -w
 ```
 
-**7. Apply the ingress routing rules** — routes `/api` to the Spring Cloud Gateway and everything else to the Node.js proxy:
+**9. Apply the ingress routing rules** — host-based routing for `api.builder.ai`,
+`builder.ai`, and `*.previews.builder.ai`:
 ```bash
-kubectl apply -f backend/k8s/infra/ingress.yaml -n builderai-core
+kubectl apply -f backend/k8s/infra/ingress.yaml
 ```
+
+> Every manifest declares its own `namespace:`, so no `-n` flag is needed on `kubectl apply`
+> — point your DNS at the ingress IP and the hosts above resolve to the right services.
 
 ---
 
 ## How It Works (Request Flow)
 
 1. The user logs in via **Account Service** (`/auth/**`) and receives a JWT.
-2. The browser hits the **NGINX Ingress** → `/api` is routed to the **API Gateway**.
+2. The browser hits the **NGINX Ingress** → `api.builder.ai` is routed to the **API Gateway**.
 3. The Gateway validates the JWT and forwards the request to the target service.
 4. To build an app, the user chats via the **Intelligence Service**, which:
    - injects the project's current file tree into the prompt (`FileTreeContextAdvisor`),
@@ -210,7 +229,7 @@ kubectl apply -f backend/k8s/infra/ingress.yaml -n builderai-core
    - generates code, parsing `<file>`/`<tool>` tags from the LLM response.
 5. **Workspace Service** persists files to **MinIO**, caches state in **Redis**, publishes
    `file-updates` events to **Kafka**, and spins up isolated **preview pods** in the
-   `Builder.AI-previews` namespace via the Kubernetes API.
+   `builder-ai-previews` namespace via the Kubernetes API.
 6. The user sees the running app in the **live preview panel**.
 
 ---
