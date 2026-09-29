@@ -1,6 +1,8 @@
 # Builder.ai
 
-Build and edit React apps with natural-language prompts. Builder.ai combines streaming AI chat, a browser code editor, and live previews backed by Kubernetes.
+Build React apps with natural-language prompts (e.g., ‘Build a snake game in React’). Builder.ai combines streaming AI chat, a browser code editor, and live previews backed by Kubernetes.
+
+![Build a snake game in React](docs/images/Builderai.png)
 
 **Stack:** React, TypeScript, Tailwind CSS · Java 21, Spring Boot, Spring Cloud, Spring AI · PostgreSQL, Kafka, MinIO, Redis · Kubernetes, Fabric8.
 
