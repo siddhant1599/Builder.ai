@@ -6,9 +6,13 @@ Build and edit React apps with natural-language prompts. Builder.ai combines str
 
 ## Architecture
 
+Click a diagram to open the SVG and zoom in without losing clarity. Original PNGs are linked below each diagram.
+
 ### 1. Microservices
 
-![Microservices architecture showing the API gateway, domain services, shared infrastructure, and Kafka file events](docs/images/architecture-microservices.png?v=5480ea0)
+[![Microservices architecture showing the API gateway, domain services, shared infrastructure, and Kafka file events](docs/images/architecture-microservices.svg?v=1)](docs/images/architecture-microservices.svg?raw=true&v=1)
+
+[Original PNG](docs/images/architecture-microservices.png?raw=true&v=5480ea0)
 
 The **API Gateway** validates JWTs and routes requests to three domain services:
 
@@ -22,7 +26,9 @@ The **API Gateway** validates JWTs and routes requests to three domain services:
 
 ### 2. AI generation and storage
 
-![AI generation flow from a user prompt through file context and tool calls to streamed output, PostgreSQL, and MinIO](docs/images/ai_design_architecture.png)
+[![AI generation flow from a user prompt through file context and tool calls to streamed output, PostgreSQL, and MinIO](docs/images/ai_design_architecture.svg?v=1)](docs/images/ai_design_architecture.svg?raw=true&v=1)
+
+[Original PNG](docs/images/ai_design_architecture.png?raw=true)
 
 1. **Gather context:** Intelligence combines the user prompt, system instructions, and the project's file tree. The `read_files` tool retrieves selected file contents through Workspace.
 2. **Stream the response:** Spring AI streams model output to the React UI over Server-Sent Events (SSE), while the backend buffers the complete response and records token usage.
@@ -31,7 +37,9 @@ The **API Gateway** validates JWTs and routes requests to three domain services:
 
 ### 3. Kubernetes previews
 
-![Code execution architecture showing runner and syncer containers, MinIO synchronization, Redis routing, and the reverse proxy](docs/images/architecture-kubernetes.png?v=5480ea0)
+[![Code execution architecture showing runner and syncer containers, MinIO synchronization, Redis routing, and the reverse proxy](docs/images/architecture-kubernetes.svg?v=1)](docs/images/architecture-kubernetes.svg?raw=true&v=1)
+
+[Original PNG](docs/images/architecture-kubernetes.png?raw=true&v=5480ea0)
 
 - **Execute:** Workspace uses Fabric8 to claim an idle pod from a runner pool. Each pod has a Node.js **runner** and a MinIO **syncer** sharing a workspace volume. The runner installs dependencies and starts Vite on port `5173`.
 - **Keep previews live:** The syncer watches project files in MinIO and mirrors changes into the pod; Vite hot module replacement updates the preview.
@@ -41,7 +49,9 @@ The [Kubernetes manifests](backend/k8s/) include NGINX ingress routes for the fr
 
 ### 4. Data model
 
-![Conceptual entity relationship diagram for users, plans, subscriptions, projects, memberships, files, previews, chats, and usage](docs/images/ER_Diagram.png)
+[![Entity relationship overview for account, workspace, and intelligence data](docs/images/ER_Diagram.svg?v=1)](docs/images/ER_Diagram.svg?raw=true&v=1)
+
+[Original PNG with full schema](docs/images/ER_Diagram.png?raw=true)
 
 - **Accounts and billing:** Users subscribe to plans that define project, preview, and AI usage allowances.
 - **Projects and collaboration:** Memberships associate users with projects and permissions. File records hold paths and MinIO object keys; the diagram also models project previews.
