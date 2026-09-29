@@ -8,7 +8,7 @@ Build and edit React apps with natural-language prompts. Builder.ai combines str
 
 ### 1. Microservices
 
-![Microservices architecture showing the API gateway, domain services, shared infrastructure, and Kafka file events](docs/images/architecture-microservices.png)
+![Microservices architecture showing the API gateway, domain services, shared infrastructure, and Kafka file events](docs/images/architecture-microservices.png?v=5480ea0)
 
 The **API Gateway** validates JWTs and routes requests to three domain services:
 
@@ -31,7 +31,7 @@ The **API Gateway** validates JWTs and routes requests to three domain services:
 
 ### 3. Kubernetes previews
 
-![Code execution architecture showing runner and syncer containers, MinIO synchronization, Redis routing, and the reverse proxy](docs/images/architecture-kubernetes.png)
+![Code execution architecture showing runner and syncer containers, MinIO synchronization, Redis routing, and the reverse proxy](docs/images/architecture-kubernetes.png?v=5480ea0)
 
 - **Execute:** Workspace uses Fabric8 to claim an idle pod from a runner pool. Each pod has a Node.js **runner** and a MinIO **syncer** sharing a workspace volume. The runner installs dependencies and starts Vite on port `5173`.
 - **Keep previews live:** The syncer watches project files in MinIO and mirrors changes into the pod; Vite hot module replacement updates the preview.
